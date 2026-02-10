@@ -1,0 +1,20 @@
+{
+    "2014": {
+        "Total Aspects": 4923,
+        "Unique Sentences": 2681,
+        "Avg Aspects/Sent": 1.84,
+        "Multi-Aspect Sent (%)": 49.87
+    },
+    "2015": {
+        "Total Aspects": 2838,
+        "Unique Sentences": 1929,
+        "Avg Aspects/Sent": 1.47,
+        "Multi-Aspect Sent (%)": 32.35
+    },
+    "2016": {
+        "Total Aspects": 3366,
+        "Unique Sentences": 2295,
+        "Avg Aspects/Sent": 1.47,
+        "Multi-Aspect Sent (%)": 31.98
+    }
+}

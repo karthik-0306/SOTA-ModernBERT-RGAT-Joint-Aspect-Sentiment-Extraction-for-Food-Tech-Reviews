@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sentences>
+    <sentence id="813">
+        <text>All the appetizers and salads were fabulous, the steak was mouth watering and the pasta was delicious!!!</text>
+        <aspectTerms>
+            <aspectTerm term="appetizers" polarity="positive" from="8" to="18"/>
+            <aspectTerm term="salads" polarity="positive" from="23" to="29"/>
+            <aspectTerm term="steak" polarity="positive" from="49" to="54"/>
+            <aspectTerm term="pasta" polarity="positive" from="82" to="87"/>
+        </aspectTerms>
+        <aspectCategories>
+            <aspectCategory category="food" polarity="positive"/>
+        </aspectCategories>
+    </sentence>
+    <sentence id="1579">
+        <text>And really large portions.</text>
+        <aspectTerms>
+            <aspectTerm term="portions" polarity="positive" from="17" to="25"/>
+        </aspectTerms>
+        <aspectCategories>
+            <aspectCategory category="food" polarity="positive"/>
+        </aspectCategories>
+    </sentence>
+    <sentence id="2707">
+        <text>Go inside and you won't want to leave.</text>
+        <aspectCategories>
+            <aspectCategory category="anecdotes/miscellaneous" polarity="positive"/>
+        </aspectCategories>
+    </sentence>
+    <sentence id="3126">
+        <text>Save yourself the time and trouble and skip this one!</text>
+        <aspectCategories>
+            <aspectCategory category="anecdotes/miscellaneous" polarity="negative"/>
+        </aspectCategories>
+    </sentence>
+    <sentence id="2882">
+        <text>The sweet lassi was excellent as was the lamb chettinad and the garlic naan but the rasamalai was forgettable.</text>
+        <aspectTerms>
+            <aspectTerm term="sweet lassi" polarity="positive" from="4" to="15"/>
+            <aspectTerm term="lamb chettinad" polarity="positive" from="41" to="55"/>
+            <aspectTerm term="garlic naan" polarity="positive" from="64" to="75"/>
+            <aspectTerm term="rasamalai" polarity="negative" from="84" to="93"/>
+        </aspectTerms>
+        <aspectCategories>
+            <aspectCategory category="food" polarity="conflict"/>
+        </aspectCategories>
+    </sentence>
+    </sentences>
