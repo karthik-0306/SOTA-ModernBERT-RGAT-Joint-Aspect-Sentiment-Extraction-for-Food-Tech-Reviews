@@ -1,0 +1,101 @@
+# ================================================================
+# SOTA ModernBERT-RGAT | Project Configuration
+# ================================================================
+
+
+# ── Data ──────────────────────────────────────────────────────────
+data:
+  processed_dir: "Data/Processed_Data"
+  datasets:
+    - "2014_rest_reviews.csv"
+    - "2015_rest_reviews.csv"
+    - "2016_rest_reviews.csv"
+  implicit_aspect_token: "[ASPECT]"   # Marker for implicit aspects (2015/2016)
+  null_aspect_token: "NULL"           # Output token when no aspect is present
+
+  # Train / Validation / Test split ratios
+  split:
+    train: 0.80
+    val: 0.10
+    test: 0.10
+    seed: 42                          # For reproducibility
+    stratify_by: "polarity"           # Stratify splits by sentiment label
+    split_level: "sentence"           # Split at sentence level to prevent leakage
+
+  # Caching
+  cache_dir: "Data/cached"
+  use_cache: true
+
+
+# ── Model ─────────────────────────────────────────────────────────
+model:
+  backbone: "answerdotai/ModernBERT-base"
+  max_len: 96
+  hidden_dim: 768
+
+  # RGAT
+  rgat:
+    num_relations: 7                  # nsubj, amod, obj, advmod, neg, compound, conj
+    num_layers: 1
+    dropout: 0.1
+
+  # Classification heads
+  num_sentiment_classes: 4            # positive, negative, neutral, conflict
+  num_bio_tags: 3                     # B-ASP, I-ASP, O  (for aspect extraction)
+
+
+# ── Training ──────────────────────────────────────────────────────
+training:
+  batch_size: 16
+  eval_batch_size: 32
+  epochs: 15
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1                   # 10% of total steps for warmup
+  max_grad_norm: 1.0                  # Gradient clipping
+
+  # Scheduler
+  scheduler: "linear_with_warmup"
+
+  # Early stopping
+  early_stopping:
+    patience: 5
+    metric: "f1"
+    mode: "max"
+
+  # Mixed precision
+  fp16: true
+
+  # Checkpointing
+  checkpoint_dir: "checkpoints"
+  save_best_only: true
+
+
+# ── Evaluation ────────────────────────────────────────────────────
+evaluation:
+  metrics:
+    - "accuracy"
+    - "f1_macro"
+    - "f1_per_class"
+    - "precision"
+    - "recall"
+  results_dir: "outputs/results"
+
+
+# ── Logging ───────────────────────────────────────────────────────
+logging:
+  log_dir: "outputs/logs"
+  log_every_n_steps: 50
+
+
+# ── Polarity Label Mapping ────────────────────────────────────────
+labels:
+  polarity:
+    positive: 0
+    negative: 1
+    neutral: 2
+    conflict: 3
+  bio_tags:
+    O: 0
+    B-ASP: 1
+    I-ASP: 2
