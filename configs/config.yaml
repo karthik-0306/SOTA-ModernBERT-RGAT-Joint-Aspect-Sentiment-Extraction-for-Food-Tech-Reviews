@@ -44,7 +44,7 @@ model:
   num_bio_tags: 3                     # B-ASP, I-ASP, O  (for aspect extraction)
 
 
-# ── Training ──────────────────────────────────────────────────────
+# -- Training ----------------------------------------------------------
 training:
   batch_size: 16
   eval_batch_size: 32
@@ -53,6 +53,11 @@ training:
   weight_decay: 0.01
   warmup_ratio: 0.1                   # 10% of total steps for warmup
   max_grad_norm: 1.0                  # Gradient clipping
+
+  # Joint loss balancing (dynamic alpha schedule)
+  alpha_start: 0.7                    # Initial ATE weight (favor aspect finding first)
+  alpha_end: 0.3                      # Final ATE weight (shift focus to sentiment)
+  focal_gamma: 2.0                    # Focal loss gamma for ASC head
 
   # Scheduler
   scheduler: "linear_with_warmup"
