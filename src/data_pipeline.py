@@ -1,6 +1,6 @@
 """
-SOTA ModernBERT-RGAT | Data Pipeline
-=====================================
+ModernBERT-RGAT | Data Pipeline
+================================
 Handles data loading, stratified splitting, caching, and DataLoader creation.
 All operations work with Processed_Data CSVs only.
 """
@@ -65,7 +65,7 @@ def load_all_datasets(config: dict) -> Dict[str, pd.DataFrame]:
         year = filename.split("_")[0]          # "2014", "2015", "2016"
         path = os.path.join(processed_dir, filename)
         datasets[year] = load_dataset(path)
-        print(f"   Loaded {year}: {len(datasets[year]):,} rows, "
+        print(f"  Loaded {year}: {len(datasets[year]):,} rows, "
               f"{datasets[year]['sentence_id'].nunique():,} sentences")
 
     return datasets
@@ -251,7 +251,7 @@ def save_splits_to_cache(
     path = os.path.join(cache_dir, f"splits_{key}.pkl")
     with open(path, "wb") as f:
         pickle.dump(splits, f)
-    print(f"  Cached splits → {path}")
+    print(f"  Cached splits -> {path}")
 
 
 def load_splits_from_cache(cache_dir: str, key: str) -> Optional[Dict[str, pd.DataFrame]]:
@@ -260,7 +260,7 @@ def load_splits_from_cache(cache_dir: str, key: str) -> Optional[Dict[str, pd.Da
     if os.path.exists(path):
         with open(path, "rb") as f:
             splits = pickle.load(f)
-        print(f"  Loaded cached splits ← {path}")
+        print(f"  Loaded cached splits from {path}")
         return splits
     return None
 
@@ -376,7 +376,7 @@ def build_all_splits(config: dict, verbose: bool = True) -> Dict[str, Tuple]:
     return all_splits
 
 
-# ── Quick Sanity Test ──────────────────────────────────────────────
+# -- Quick Sanity Test --------------------------------------------------
 if __name__ == "__main__":
     cfg = load_config()
     print(" Building splits for all datasets ...\n")
