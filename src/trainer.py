@@ -244,9 +244,19 @@ class Trainer:
         self.dataset_year = dataset_year
 
         # Move model to device
+        # Freeze backbone layers first to reduce GPU memory (frozen params don't need optimizer states)
+        num_trainable = config["training"].get("num_trainable_layers", 4)
+        if hasattr(model, 'freeze_backbone'):
+            model.freeze_backbone(num_trainable_layers=num_trainable)
+
         self.model = model.to(self.device)
         self.train_loader = train_loader
         self.val_loader = val_loader
+
+        # Enable gradient checkpointing on the backbone to save GPU memory
+        if hasattr(self.model, 'bert') and hasattr(self.model.bert, 'gradient_checkpointing_enable'):
+            self.model.bert.gradient_checkpointing_enable()
+            print("  Gradient checkpointing: ENABLED")
 
         # Training config
         train_cfg = config["training"]
@@ -254,15 +264,20 @@ class Trainer:
         self.max_grad_norm = train_cfg["max_grad_norm"]
         self.use_fp16 = train_cfg.get("fp16", False) and torch.cuda.is_available()
         self.log_every_n_steps = config.get("logging", {}).get("log_every_n_steps", 50)
+        self.gradient_accumulation_steps = train_cfg.get("gradient_accumulation_steps", 1)
 
         # Total training steps (for scheduler and alpha scheduling)
-        self.total_steps = len(train_loader) * self.epochs
+        effective_batches = len(train_loader) // self.gradient_accumulation_steps
+        self.total_steps = effective_batches * self.epochs
 
-        # Optimizer: AdamW with weight decay
+        # Optimizer: only trainable parameters (frozen params excluded)
+        # foreach=False avoids multi-tensor ops that need extra GPU memory
+        trainable_params = [p for p in self.model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.AdamW(
-            self.model.parameters(),
+            trainable_params,
             lr=train_cfg["learning_rate"],
             weight_decay=train_cfg["weight_decay"],
+            foreach=False,
         )
 
         # LR Scheduler: linear warmup then linear decay
@@ -289,8 +304,8 @@ class Trainer:
             total_steps=self.total_steps,
         )
 
-        # Mixed precision scaler
-        self.scaler = GradScaler("cuda", enabled=self.use_fp16)
+        # Mixed precision scaler (only enable on CUDA)
+        self.scaler = GradScaler(self.device.type, enabled=self.use_fp16)
 
         # Early stopping
         es_cfg = train_cfg.get("early_stopping", {})
@@ -337,6 +352,9 @@ class Trainer:
         total_ate_loss = 0.0
         total_asc_loss = 0.0
         num_batches = 0
+        accum = self.gradient_accumulation_steps
+
+        self.optimizer.zero_grad()  # Zero grads once at the start
 
         for step, batch in enumerate(self.train_loader):
             # Move batch to device
@@ -361,28 +379,35 @@ class Trainer:
                     asc_logits=outputs["sentiment_logits"],
                     asc_labels=sentiment_labels,
                 )
+                # Scale loss by accumulation steps
+                loss = loss / accum
 
-            # Backward pass
-            self.optimizer.zero_grad()
+            # Backward pass (accumulate gradients)
             self.scaler.scale(loss).backward()
 
-            # Gradient clipping (unscale first for correct norm computation)
-            self.scaler.unscale_(self.optimizer)
-            torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(), self.max_grad_norm
-            )
+            # Only step optimizer every `accum` steps
+            if (step + 1) % accum == 0 or (step + 1) == len(self.train_loader):
+                # Gradient clipping (unscale first for correct norm computation)
+                self.scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), self.max_grad_norm
+                )
 
-            # Optimizer step
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
-            self.scheduler.step()
-            self.loss_fn.step()  # advance dynamic alpha
+                # Optimizer step
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+                self.optimizer.zero_grad()
+                self.scheduler.step()
+                self.loss_fn.step()  # advance dynamic alpha
 
-            # Accumulate metrics
-            total_loss += loss.item()
+            # Accumulate metrics (use unscaled loss)
+            total_loss += loss.item() * accum
             total_ate_loss += ate_loss.item()
             total_asc_loss += asc_loss.item()
             num_batches += 1
+
+            # Free intermediate tensors to reduce peak memory
+            del outputs, loss, ate_loss, asc_loss
 
             # Step-level logging
             global_step = epoch * len(self.train_loader) + step

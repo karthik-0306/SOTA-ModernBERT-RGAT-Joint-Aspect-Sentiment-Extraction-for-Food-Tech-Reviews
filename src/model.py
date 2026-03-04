@@ -242,7 +242,7 @@ class ModernBERT_RGAT(nn.Module):
         super().__init__()
 
         # 1. Semantic backbone
-        self.bert = AutoModel.from_pretrained(model_name)
+        self.bert = AutoModel.from_pretrained(model_name, low_cpu_mem_usage=True)
 
         # 2. Syntactic layer (RGAT)
         self.rgat = RGATLayer(
@@ -263,6 +263,46 @@ class ModernBERT_RGAT(nn.Module):
             num_classes=num_sentiment_classes,
             dropout=head_dropout,
         )
+
+    def freeze_backbone(self, num_trainable_layers: int = 4):
+        """
+        Freeze all BERT layers except the last `num_trainable_layers`.
+        
+        This dramatically reduces GPU memory by cutting optimizer states
+        and gradients (only ~20% of params are trainable with default 4).
+        RGAT and task heads are always trainable.
+        
+        ModernBERT-base has 22 transformer layers (0-21).
+        Default: freeze layers 0-17, keep 18-21 trainable.
+        """
+        # Freeze embeddings
+        if hasattr(self.bert, 'embeddings'):
+            for param in self.bert.embeddings.parameters():
+                param.requires_grad = False
+
+        # Freeze encoder layers except last N
+        layers = None
+        if hasattr(self.bert, 'encoder') and hasattr(self.bert.encoder, 'layers'):
+            layers = self.bert.encoder.layers
+        elif hasattr(self.bert, 'layers'):
+            layers = self.bert.layers
+
+        if layers is not None:
+            total_layers = len(layers)
+            freeze_until = total_layers - num_trainable_layers
+            for i, layer in enumerate(layers):
+                if i < freeze_until:
+                    for param in layer.parameters():
+                        param.requires_grad = False
+
+            trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
+            total = sum(p.numel() for p in self.parameters())
+            print(f"  Frozen {freeze_until}/{total_layers} BERT layers, "
+                  f"keeping last {num_trainable_layers} trainable")
+            print(f"  Trainable params: {trainable:,} / {total:,} "
+                  f"({100*trainable/total:.1f}%)")
+        else:
+            print("  WARNING: Could not find encoder layers to freeze")
 
     def forward(
         self,

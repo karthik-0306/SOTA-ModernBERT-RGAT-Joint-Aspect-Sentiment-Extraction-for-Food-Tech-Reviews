@@ -1,0 +1,140 @@
+[
+  {
+    "text": "The spicy ramen was incredibly flavorful and the broth was rich.",
+    "predictions": [
+      {
+        "aspect": "ram",
+        "sentiment": "positive",
+        "confidence": 0.5018,
+        "start": 9,
+        "end": 13
+      },
+      {
+        "aspect": "broth",
+        "sentiment": "positive",
+        "confidence": 0.6081,
+        "start": 48,
+        "end": 54
+      }
+    ]
+  },
+  {
+    "text": "Terrible pizza with a soggy crust, but the drinks were excellent.",
+    "predictions": [
+      {
+        "aspect": "pizza",
+        "sentiment": "negative",
+        "confidence": 0.9093,
+        "start": 8,
+        "end": 14
+      },
+      {
+        "aspect": "drinks",
+        "sentiment": "positive",
+        "confidence": 0.8898,
+        "start": 42,
+        "end": 49
+      }
+    ]
+  },
+  {
+    "text": "Average food, nothing special about the ambiance either.",
+    "predictions": [
+      {
+        "aspect": "food",
+        "sentiment": "neutral",
+        "confidence": 0.7983,
+        "start": 7,
+        "end": 12
+      },
+      {
+        "aspect": "am",
+        "sentiment": "negative",
+        "confidence": 0.3589,
+        "start": 39,
+        "end": 42
+      }
+    ]
+  },
+  {
+    "text": "The sushi here is the best I have ever had, fresh and perfectly seasoned.",
+    "predictions": [
+      {
+        "aspect": "sushi",
+        "sentiment": "positive",
+        "confidence": 0.8738,
+        "start": 3,
+        "end": 9
+      }
+    ]
+  },
+  {
+    "text": "Long wait times and rude staff ruined an otherwise decent meal.",
+    "predictions": [
+      {
+        "aspect": "staff",
+        "sentiment": "negative",
+        "confidence": 0.9772,
+        "start": 24,
+        "end": 30
+      },
+      {
+        "aspect": "meal",
+        "sentiment": "neutral",
+        "confidence": 0.5604,
+        "start": 57,
+        "end": 62
+      }
+    ]
+  },
+  {
+    "text": "Loved the cheesecake but the coffee was lukewarm and bitter.",
+    "predictions": [
+      {
+        "aspect": "chees",
+        "sentiment": "positive",
+        "confidence": 0.4527,
+        "start": 9,
+        "end": 15
+      },
+      {
+        "aspect": "coffee",
+        "sentiment": "negative",
+        "confidence": 0.7766,
+        "start": 28,
+        "end": 35
+      }
+    ]
+  },
+  {
+    "text": "Great location with a beautiful patio, although prices are a bit high.",
+    "predictions": [
+      {
+        "aspect": "patio",
+        "sentiment": "positive",
+        "confidence": 0.921,
+        "start": 31,
+        "end": 37
+      },
+      {
+        "aspect": "prices",
+        "sentiment": "negative",
+        "confidence": 0.5017,
+        "start": 47,
+        "end": 54
+      }
+    ]
+  },
+  {
+    "text": "The butter chicken was creamy and aromatic, paired perfectly with garlic naan.",
+    "predictions": [
+      {
+        "aspect": "butter chicken",
+        "sentiment": "positive",
+        "confidence": 0.808,
+        "start": 3,
+        "end": 18
+      }
+    ]
+  }
+]

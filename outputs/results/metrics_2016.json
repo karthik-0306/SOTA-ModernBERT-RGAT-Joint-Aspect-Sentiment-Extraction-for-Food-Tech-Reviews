@@ -1,0 +1,65 @@
+{
+  "dataset_year": "2016",
+  "ate": {
+    "strict_precision": 0.4675,
+    "strict_recall": 0.4356,
+    "strict_f1": 0.451,
+    "partial_precision": 0.5488,
+    "partial_recall": 0.5114,
+    "partial_f1": 0.5294,
+    "token_precision": 0.5927,
+    "token_recall": 0.4602,
+    "token_f1": 0.5181,
+    "num_pred_spans": 246,
+    "num_gold_spans": 264
+  },
+  "asc": {
+    "accuracy": 0.7791,
+    "macro_f1": 0.6127,
+    "weighted_f1": 0.7879,
+    "per_class_f1": {
+      "positive": 0.8456057007125891,
+      "negative": 0.7257383966244726,
+      "neutral": 0.26666666666666666
+    },
+    "per_class_precision": {
+      "positive": 0.9417989417989417,
+      "negative": 0.6187050359712231,
+      "neutral": 0.25
+    },
+    "per_class_recall": {
+      "positive": 0.7672413793103449,
+      "negative": 0.8775510204081632,
+      "neutral": 0.2857142857142857
+    },
+    "confusion_matrix": [
+      [
+        178,
+        47,
+        7,
+        0
+      ],
+      [
+        7,
+        86,
+        5,
+        0
+      ],
+      [
+        4,
+        6,
+        4,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "combined_f1": 0.5318,
+  "num_samples": 344,
+  "num_errors": 50
+}
