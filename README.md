@@ -39,43 +39,43 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
                            └──────────┬───────────┘
                                       │
                     ┌─────────────────┼─────────────────┐
-                    │                 │                   │
+                    │                 │                  │
             ┌───────▼───────┐ ┌──────▼──────┐   ┌──────▼──────┐
-            │  ModernBERT    │ │  SpaCy NLP   │   │  Tokenizer  │
-            │  Tokenizer     │ │  Dep Parse   │   │  Alignment  │
+            │  ModernBERT   │ │  SpaCy NLP  │   │  Tokenizer  │
+            │  Tokenizer    │ │  Dep Parse  │   │  Alignment  │
             └───────┬───────┘ └──────┬──────┘   └──────┬──────┘
-                    │                 │                   │
-                    │         ┌──────▼──────┐            │
-                    │         │  Adjacency   │            │
-                    │         │  Tensor [R]   │            │
-                    │         └──────┬──────┘            │
-                    │                 │                   │
-            ┌───────▼─────────────────▼───────────────────▼──┐
-            │                                                 │
-            │        ModernBERT Encoder (22 layers)           │
-            │        ═══════════════════════════               │
-            │        RoPE + Flash Attention                    │
-            │        (8 layers unfrozen for fine-tuning)       │
-            │                                                 │
-            └──────────────────┬──────────────────────────────┘
+                    │                │                 │
+                    │         ┌──────▼──────┐          │
+                    │         │  Adjacency   │         │
+                    │         │  Tensor [R]   │        │
+                    │         └──────┬──────┘          │
+                    │                │                 │
+            ┌───────▼────────────────▼─────────────────▼──┐
+            │                                             │
+            │        ModernBERT Encoder (22 layers)       │
+            │        ═══════════════════════════          │
+            │        RoPE + Flash Attention               │
+            │        (8 layers unfrozen for fine-tuning)  │
+            │                                             │
+            └──────────────────┬──────────────────────────┘
                                │
                         ┌──────▼──────┐
-                        │    RGAT      │
-                        │   Layer      │
-                        │ (7 relations)│
+                        │    RGAT     │
+                        │   Layer     │
+                        │ (7relations)│
                         └──────┬──────┘
                                │
                     ┌──────────┼──────────┐
                     │                      │
             ┌───────▼───────┐    ┌────────▼────────┐
-            │   ATE Head     │    │    ASC Head      │
-            │  Token-level   │    │   Span-level     │
-            │  BIO Tagger    │    │   Classifier     │
-            │  ───────────   │    │   ────────────   │
-            │  O / B-ASP /   │    │   pos / neg /    │
-            │  I-ASP         │    │   neu / conflict │
+            │   ATE Head    │    │    ASC Head     │
+            │  Token-level  │    │   Span-level    │
+            │  BIO Tagger   │    │   Classifier    │
+            │  ───────────  │    │   ────────────  │
+            │  O / B-ASP /  │    │   pos / neg /   │
+            │  I-ASP        │    │   neu / conflict│
             └───────┬───────┘    └────────┬────────┘
-                    │                      │
+                    │                     │
                     ▼                      ▼
             Extracted Aspects      Sentiment Labels
             ["pasta", "service"]   [positive, negative]
@@ -291,6 +291,6 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 
 <div align="center">
 
-**Built with ❤️ for advancing aspect-level sentiment analysis in food-tech**
+**Built for advancing aspect-level sentiment analysis in food-tech**
 
 </div>
