@@ -114,33 +114,35 @@ class ABSAPreprocessor:
         aspect: str,
         span_start: int,
         span_end: int,
+        all_aspects: list = None,
         implicit_token: str = "[ASPECT]",
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Generate BIO labels aligned to ModernBERT sub-tokens.
+
+        MULTI-ASPECT: BIO labels mark ALL aspects in the sentence (not just
+        the primary one). This prevents conflicting ATE targets when the
+        same sentence appears multiple times with different aspects.
+
+        The aspect_mask only marks the PRIMARY aspect (for ASC head).
 
         Sub-word alignment strategy:
           - First sub-token of each word -> gets the real BIO label
           - Remaining sub-tokens of the same word -> -100 (ignored by loss)
           - Special tokens ([CLS], [SEP], [PAD]) -> -100
 
-        Uses word_ids() from the tokenizer to detect word boundaries,
-        which works correctly with GPT-style tokenizers (like ModernBERT)
-        where leading spaces are part of the token.
-
-        Also generates an aspect_mask for the ASC head (all aspect
-        sub-tokens are marked, not just the first).
-
         Args:
-            text:       Original sentence text
-            aspect:     Aspect term string (or "[ASPECT]" for implicit)
-            span_start: Character-level start index of aspect in text
-            span_end:   Character-level end index of aspect in text
+            text:         Original sentence text
+            aspect:       Primary aspect term (for aspect_mask)
+            span_start:   Character-level start index of primary aspect
+            span_end:     Character-level end index of primary aspect
+            all_aspects:  List of dicts with 'aspect', 'span_start', 'span_end'
+                          for ALL aspects in this sentence (for BIO labels)
             implicit_token: Marker for implicit aspects
 
         Returns:
             bio_labels:  [max_len] tensor (0=O, 1=B-ASP, 2=I-ASP, -100=ignore)
-            aspect_mask: [max_len] tensor (1 at aspect token positions, 0 elsewhere)
+            aspect_mask: [max_len] tensor (1 at PRIMARY aspect positions only)
         """
         encoding = self.tokenizer(
             text,
@@ -151,17 +153,31 @@ class ABSAPreprocessor:
             padding='max_length',
         )
         offsets = encoding.offset_mapping
-        word_ids = encoding.word_ids()  # None for special/pad tokens, int for real tokens
+        word_ids = encoding.word_ids()
 
         bio_labels = torch.full((self.max_len,), -100, dtype=torch.long)
         aspect_mask = torch.zeros(self.max_len, dtype=torch.float)
 
-        # Handle implicit aspects - no BIO tagging needed, no aspect mask
+        # Handle implicit aspects - no BIO tagging needed
         if aspect == implicit_token or (span_start == 0 and span_end == 0 and aspect == implicit_token):
             for idx in range(self.max_len):
                 if word_ids[idx] is not None:
                     bio_labels[idx] = 0  # O tag for all real tokens
             return bio_labels, aspect_mask
+
+        # Build list of ALL aspect spans for BIO labels
+        # If all_aspects is provided, use them; otherwise fall back to single aspect
+        if all_aspects is None:
+            aspect_spans = [{'span_start': span_start, 'span_end': span_end}]
+        else:
+            # Filter out implicit aspects from BIO labeling
+            aspect_spans = [
+                a for a in all_aspects
+                if a.get('aspect', '') != implicit_token
+                and not (a['span_start'] == 0 and a['span_end'] == 0)
+            ]
+            if not aspect_spans:
+                aspect_spans = [{'span_start': span_start, 'span_end': span_end}]
 
         # Determine which tokens are first sub-tokens of their word
         prev_word_id = None
@@ -174,29 +190,38 @@ class ABSAPreprocessor:
                 is_first_subtoken.append(wid != prev_word_id)
             prev_word_id = wid
 
-        # Assign BIO labels
-        aspect_started = False
+        # Assign BIO labels for ALL aspects in the sentence
         for idx in range(self.max_len):
             wid = word_ids[idx]
             if wid is None:
                 continue  # special/pad token stays -100
 
             start, end = offsets[idx]
+            token_in_any_aspect = False
+            is_first_aspect_token = False
 
-            # Check if this sub-token overlaps with the aspect span
-            token_in_aspect = (start < span_end) and (end > span_start)
+            # Check against ALL aspect spans
+            for asp in aspect_spans:
+                a_start = asp['span_start']
+                a_end = asp['span_end']
+                if (start < a_end) and (end > a_start):
+                    token_in_any_aspect = True
+                    # Check if this is the FIRST token of THIS aspect
+                    if start <= a_start < end:
+                        is_first_aspect_token = True
+                    break
 
-            if token_in_aspect:
+            if token_in_any_aspect:
                 if is_first_subtoken[idx]:
-                    if not aspect_started:
+                    if is_first_aspect_token:
                         bio_labels[idx] = 1  # B-ASP
-                        aspect_started = True
                     else:
                         bio_labels[idx] = 2  # I-ASP
-                # Non-first sub-tokens of aspect words stay -100
+                # Non-first sub-tokens stay -100
 
-                # Aspect mask: mark ALL aspect sub-tokens (for MaxPool in ASC head)
-                aspect_mask[idx] = 1.0
+                # Aspect mask: only mark the PRIMARY aspect (for ASC head)
+                if (start < span_end) and (end > span_start):
+                    aspect_mask[idx] = 1.0
             else:
                 if is_first_subtoken[idx]:
                     bio_labels[idx] = 0  # O
@@ -214,6 +239,7 @@ class ABSAPreprocessor:
         span_start: int,
         span_end: int,
         label_map: Dict[str, int],
+        all_aspects: list = None,
         implicit_token: str = "[ASPECT]",
     ) -> Dict[str, torch.Tensor]:
         """
@@ -235,9 +261,11 @@ class ABSAPreprocessor:
         # 2. Adjacency tensor
         adj_tensor = self.build_adjacency_tensor(text)
 
-        # 3. BIO labels + aspect mask
+        # 3. BIO labels + aspect mask (with ALL aspects for BIO)
         bio_labels, aspect_mask = self.align_bio_labels(
-            text, aspect, span_start, span_end, implicit_token
+            text, aspect, span_start, span_end,
+            all_aspects=all_aspects,
+            implicit_token=implicit_token,
         )
 
         # 4. Sentiment label
@@ -266,8 +294,13 @@ class ABSADataset(Dataset):
         - attention_mask:  Attention mask                 [max_len]
         - adj_matrix:      Dependency adjacency tensor    [7, max_len, max_len]
         - bio_labels:      BIO labels (-100 for ignored)  [max_len]
-        - aspect_mask:     1 at aspect positions          [max_len]
+        - aspect_mask:     1 at PRIMARY aspect positions  [max_len]
         - sentiment_label: Polarity class index           scalar
+
+    MULTI-ASPECT BIO: For each sample, BIO labels mark ALL aspects in
+    the sentence (not just the primary one). This gives the ATE head
+    consistent targets regardless of which aspect is the 'primary' one
+    for ASC.
     """
 
     def __init__(
@@ -282,11 +315,30 @@ class ABSADataset(Dataset):
         self.label_map = label_map
         self.implicit_token = implicit_token
 
+        # Build sentence -> all aspects lookup for multi-aspect BIO labels
+        self._build_sentence_aspects_lookup()
+
+    def _build_sentence_aspects_lookup(self):
+        """Pre-compute all aspects for each sentence for multi-aspect BIO."""
+        self.sentence_aspects = {}
+        for _, row in self.df.iterrows():
+            sid = row['sentence_id']
+            if sid not in self.sentence_aspects:
+                self.sentence_aspects[sid] = []
+            self.sentence_aspects[sid].append({
+                'aspect': row['aspect'],
+                'span_start': int(row['span_start']),
+                'span_end': int(row['span_end']),
+            })
+
     def __len__(self) -> int:
         return len(self.df)
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         row = self.df.iloc[idx]
+
+        # Get ALL aspects for this sentence (for BIO labels)
+        all_aspects = self.sentence_aspects.get(row['sentence_id'], None)
 
         return self.preprocessor.encode(
             text=row['sentence'],
@@ -295,6 +347,7 @@ class ABSADataset(Dataset):
             span_start=int(row['span_start']),
             span_end=int(row['span_end']),
             label_map=self.label_map,
+            all_aspects=all_aspects,
             implicit_token=self.implicit_token,
         )
 

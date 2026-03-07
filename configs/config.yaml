@@ -49,23 +49,28 @@ training:
   batch_size: 4
   gradient_accumulation_steps: 4    # effective batch = 4 x 4 = 16
   eval_batch_size: 8
-  epochs: 15
-  learning_rate: 2.0e-5
-  weight_decay: 0.01
+  epochs: 20
+  learning_rate: 1.0e-5              # BERT backbone LR
+  head_lr: 3.0e-4                     # Heads + RGAT LR (differential)
+  weight_decay: 0.05                  # Stronger regularization
   warmup_ratio: 0.1                   # 10% of total steps for warmup
   max_grad_norm: 1.0                  # Gradient clipping
 
-  # Joint loss balancing (dynamic alpha schedule)
-  alpha_start: 0.7                    # Initial ATE weight (favor aspect finding first)
-  alpha_end: 0.3                      # Final ATE weight (shift focus to sentiment)
-  focal_gamma: 2.0                    # Focal loss gamma for ASC head
+  # Regularization
+  head_dropout: 0.4                   # Dropout for ATE/ASC heads (stronger for small datasets)
+  label_smoothing: 0.1                # Label smoothing for ATE loss
+  num_trainable_layers: 8             # BERT layers to unfreeze (of 22)
+
+  # Joint loss balancing (fixed equal weighting)
+  alpha_start: 0.5                    # ATE weight
+  alpha_end: 0.5                      # Fixed (no schedule)
 
   # Scheduler
   scheduler: "linear_with_warmup"
 
   # Early stopping
   early_stopping:
-    patience: 5
+    patience: 5                       # Allow model time to learn
     metric: "f1"
     mode: "max"
 

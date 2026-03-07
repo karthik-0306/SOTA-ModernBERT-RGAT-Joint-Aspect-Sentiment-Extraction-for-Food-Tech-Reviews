@@ -237,7 +237,7 @@ class ModernBERT_RGAT(nn.Module):
         num_bio_tags: int = 3,
         num_relations: int = 7,
         rgat_dropout: float = 0.1,
-        head_dropout: float = 0.1,
+        head_dropout: float = 0.4,
     ):
         super().__init__()
 

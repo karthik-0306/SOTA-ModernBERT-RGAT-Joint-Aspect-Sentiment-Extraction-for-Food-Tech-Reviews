@@ -1,54 +1,54 @@
 {
   "dataset_year": "2015",
   "ate": {
-    "strict_precision": 0.5278,
-    "strict_recall": 0.4358,
-    "strict_f1": 0.4774,
-    "partial_precision": 0.5722,
-    "partial_recall": 0.4725,
-    "partial_f1": 0.5176,
-    "token_precision": 0.6471,
-    "token_recall": 0.4342,
-    "token_f1": 0.5197,
-    "num_pred_spans": 180,
-    "num_gold_spans": 218
+    "strict_precision": 0.6831,
+    "strict_recall": 0.6761,
+    "strict_f1": 0.6796,
+    "partial_precision": 0.7532,
+    "partial_recall": 0.7455,
+    "partial_f1": 0.7494,
+    "token_precision": 0.8292,
+    "token_recall": 0.6949,
+    "token_f1": 0.7561,
+    "num_pred_spans": 385,
+    "num_gold_spans": 389
   },
   "asc": {
-    "accuracy": 0.7542,
-    "macro_f1": 0.5595,
-    "weighted_f1": 0.7726,
+    "accuracy": 0.8384,
+    "macro_f1": 0.5954,
+    "weighted_f1": 0.8329,
     "per_class_f1": {
-      "positive": 0.8254847645429363,
-      "negative": 0.7448979591836735,
-      "neutral": 0.10810810810810811
+      "positive": 0.9007633587786259,
+      "negative": 0.7802197802197802,
+      "neutral": 0.10526315789473684
     },
     "per_class_precision": {
-      "positive": 0.9085365853658537,
-      "negative": 0.6759259259259259,
-      "neutral": 0.08
+      "positive": 0.9030612244897959,
+      "negative": 0.7553191489361702,
+      "neutral": 0.14285714285714285
     },
     "per_class_recall": {
-      "positive": 0.7563451776649747,
-      "negative": 0.8295454545454546,
-      "neutral": 0.16666666666666666
+      "positive": 0.8984771573604061,
+      "negative": 0.8068181818181818,
+      "neutral": 0.08333333333333333
     },
     "confusion_matrix": [
       [
-        149,
-        32,
-        16,
-        0
-      ],
-      [
-        8,
-        73,
-        7,
-        0
-      ],
-      [
-        7,
-        3,
+        177,
+        18,
         2,
+        0
+      ],
+      [
+        13,
+        71,
+        4,
+        0
+      ],
+      [
+        6,
+        5,
+        1,
         0
       ],
       [
@@ -59,7 +59,7 @@
       ]
     ]
   },
-  "combined_f1": 0.5184,
+  "combined_f1": 0.6375,
   "num_samples": 297,
   "num_errors": 50
 }

@@ -1,54 +1,54 @@
 {
   "dataset_year": "2016",
   "ate": {
-    "strict_precision": 0.4675,
-    "strict_recall": 0.4356,
-    "strict_f1": 0.451,
-    "partial_precision": 0.5488,
-    "partial_recall": 0.5114,
-    "partial_f1": 0.5294,
-    "token_precision": 0.5927,
-    "token_recall": 0.4602,
-    "token_f1": 0.5181,
-    "num_pred_spans": 246,
-    "num_gold_spans": 264
+    "strict_precision": 0.6687,
+    "strict_recall": 0.6755,
+    "strict_f1": 0.672,
+    "partial_precision": 0.7751,
+    "partial_recall": 0.783,
+    "partial_f1": 0.779,
+    "token_precision": 0.8303,
+    "token_recall": 0.7405,
+    "token_f1": 0.7829,
+    "num_pred_spans": 498,
+    "num_gold_spans": 493
   },
   "asc": {
-    "accuracy": 0.7791,
-    "macro_f1": 0.6127,
-    "weighted_f1": 0.7879,
+    "accuracy": 0.8779,
+    "macro_f1": 0.6528,
+    "weighted_f1": 0.872,
     "per_class_f1": {
-      "positive": 0.8456057007125891,
-      "negative": 0.7257383966244726,
-      "neutral": 0.26666666666666666
+      "positive": 0.925764192139738,
+      "negative": 0.8421052631578947,
+      "neutral": 0.19047619047619047
     },
     "per_class_precision": {
-      "positive": 0.9417989417989417,
-      "negative": 0.6187050359712231,
-      "neutral": 0.25
+      "positive": 0.9380530973451328,
+      "negative": 0.7927927927927928,
+      "neutral": 0.2857142857142857
     },
     "per_class_recall": {
-      "positive": 0.7672413793103449,
-      "negative": 0.8775510204081632,
-      "neutral": 0.2857142857142857
+      "positive": 0.9137931034482759,
+      "negative": 0.8979591836734694,
+      "neutral": 0.14285714285714285
     },
     "confusion_matrix": [
       [
-        178,
-        47,
-        7,
+        212,
+        18,
+        2,
         0
       ],
       [
         7,
-        86,
+        88,
+        3,
+        0
+      ],
+      [
+        7,
         5,
-        0
-      ],
-      [
-        4,
-        6,
-        4,
+        2,
         0
       ],
       [
@@ -59,7 +59,7 @@
       ]
     ]
   },
-  "combined_f1": 0.5318,
+  "combined_f1": 0.6624,
   "num_samples": 344,
   "num_errors": 50
 }

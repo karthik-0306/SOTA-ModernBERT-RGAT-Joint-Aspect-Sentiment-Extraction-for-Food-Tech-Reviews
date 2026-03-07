@@ -270,15 +270,34 @@ class Trainer:
         effective_batches = len(train_loader) // self.gradient_accumulation_steps
         self.total_steps = effective_batches * self.epochs
 
-        # Optimizer: only trainable parameters (frozen params excluded)
+        # Optimizer: differential learning rates
+        # BERT backbone gets a lower LR for gentle fine-tuning
+        # RGAT + task heads get a higher LR since they're randomly initialized
+        bert_lr = train_cfg["learning_rate"]          # e.g. 1e-5
+        head_lr = train_cfg.get("head_lr", bert_lr)   # e.g. 3e-4
+        weight_decay = train_cfg["weight_decay"]
+
+        bert_params = []
+        head_params = []
+        for name, param in self.model.named_parameters():
+            if not param.requires_grad:
+                continue
+            if name.startswith("bert"):
+                bert_params.append(param)
+            else:
+                head_params.append(param)
+
+        param_groups = [
+            {"params": bert_params, "lr": bert_lr, "weight_decay": weight_decay},
+            {"params": head_params, "lr": head_lr, "weight_decay": weight_decay},
+        ]
         # foreach=False avoids multi-tensor ops that need extra GPU memory
-        trainable_params = [p for p in self.model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.AdamW(
-            trainable_params,
-            lr=train_cfg["learning_rate"],
-            weight_decay=train_cfg["weight_decay"],
+            param_groups,
             foreach=False,
         )
+        print(f"  Optimizer: BERT params={len(bert_params)} @ lr={bert_lr}, "
+              f"Head params={len(head_params)} @ lr={head_lr}")
 
         # LR Scheduler: linear warmup then linear decay
         warmup_steps = int(self.total_steps * train_cfg["warmup_ratio"])
@@ -288,10 +307,10 @@ class Trainer:
             num_training_steps=self.total_steps,
         )
 
-        # Joint loss function with dynamic alpha and focal loss
-        alpha_start = train_cfg.get("alpha_start", 0.7)
-        alpha_end = train_cfg.get("alpha_end", 0.3)
-        focal_gamma = train_cfg.get("focal_gamma", 2.0)
+        # Joint loss function with equal alpha and standard CE
+        alpha_start = train_cfg.get("alpha_start", 0.5)
+        alpha_end = train_cfg.get("alpha_end", 0.5)
+        label_smoothing = train_cfg.get("label_smoothing", 0.1)
 
         if sentiment_weights is not None:
             sentiment_weights = sentiment_weights.to(self.device)
@@ -300,8 +319,8 @@ class Trainer:
             sentiment_weights=sentiment_weights,
             alpha_start=alpha_start,
             alpha_end=alpha_end,
-            gamma=focal_gamma,
             total_steps=self.total_steps,
+            label_smoothing=label_smoothing,
         )
 
         # Mixed precision scaler (only enable on CUDA)
@@ -329,13 +348,14 @@ class Trainer:
         print(f"  Epochs:          {self.epochs}")
         print(f"  Total steps:     {self.total_steps}")
         print(f"  Warmup steps:    {warmup_steps}")
-        print(f"  Learning rate:   {train_cfg['learning_rate']}")
+        print(f"  Learning rate:   BERT={bert_lr}, Heads={head_lr}")
         print(f"  Batch size:      {train_cfg['batch_size']}")
         print(f"  FP16:            {self.use_fp16}")
-        print(f"  Alpha schedule:  {alpha_start} -> {alpha_end}")
-        print(f"  Focal gamma:     {focal_gamma}")
+        print(f"  Alpha:           {alpha_start} -> {alpha_end}")
+        print(f"  Label smoothing: {label_smoothing}")
+        print(f"  Head dropout:    {train_cfg.get('head_dropout', 0.4)}")
+        print(f"  Trainable layers:{num_trainable}")
         print(f"  Early stopping:  patience={es_cfg.get('patience', 5)}")
-        print(f"{'='*60}\n")
 
     # ------------------------------------------------------------------
     #  Training Loop (one epoch)

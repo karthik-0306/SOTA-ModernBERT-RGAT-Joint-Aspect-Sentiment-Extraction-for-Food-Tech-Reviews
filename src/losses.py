@@ -136,41 +136,50 @@ class JointTaskLoss(nn.Module):
     Combined loss for joint ATE + ASC training.
 
     Components:
-      - ATE loss: CrossEntropyLoss with ignore_index=-100
+      - ATE loss: CrossEntropyLoss with ignore_index=-100 and label smoothing
         (skips sub-tokens, special tokens, and padding automatically)
-      - ASC loss: FocalLoss with class weights and gamma focusing
-      - Dynamic alpha: linearly shifts balance from ATE to ASC
+      - ASC loss: Weighted CrossEntropyLoss (standard CE, NOT focal loss)
+        Using standard CE keeps both losses at comparable magnitudes,
+        ensuring ATE gets a fair share of the gradient signal.
+      - Fixed alpha=0.5: equal weighting for both tasks
 
     Args:
         sentiment_weights: class weight tensor for ASC [num_classes]
-        alpha_start:       initial alpha (ATE weight), default 0.7
-        alpha_end:         final alpha (ATE weight), default 0.3
-        gamma:             focal loss gamma, default 2.0
+        alpha_start:       ATE weight (default 0.5 = equal)
+        alpha_end:         final ATE weight (default 0.5 = fixed)
         total_steps:       total training steps for alpha scheduling
         num_bio_tags:      number of BIO tags (default 3: O, B-ASP, I-ASP)
+        label_smoothing:   label smoothing for ATE loss (default 0.1)
     """
 
     def __init__(
         self,
         sentiment_weights: Optional[torch.Tensor] = None,
-        alpha_start: float = 0.7,
-        alpha_end: float = 0.3,
-        gamma: float = 2.0,
+        alpha_start: float = 0.5,
+        alpha_end: float = 0.5,
         total_steps: int = 1000,
         num_bio_tags: int = 3,
+        label_smoothing: float = 0.1,
+        # Accept gamma for backward compat but don't use it
+        gamma: float = 0.0,
     ):
         super().__init__()
         self.num_bio_tags = num_bio_tags
 
-        # ATE: standard cross-entropy that ignores -100 labels
-        self.ate_criterion = nn.CrossEntropyLoss(ignore_index=-100)
-
-        # ASC: focal loss with class weights for imbalanced sentiments
-        self.asc_criterion = FocalLoss(
-            gamma=gamma, weight=sentiment_weights
+        # ATE: cross-entropy with label smoothing to prevent over-confidence
+        self.ate_criterion = nn.CrossEntropyLoss(
+            ignore_index=-100,
+            label_smoothing=label_smoothing,
         )
 
-        # Dynamic alpha scheduler
+        # ASC: standard weighted cross-entropy (NOT focal loss)
+        # Standard CE keeps loss magnitude comparable to ATE CE (~0.3-1.0 range)
+        # Focal loss was producing 2-3x larger values, starving ATE of gradients
+        self.asc_criterion = nn.CrossEntropyLoss(
+            weight=sentiment_weights,
+        )
+
+        # Alpha scheduler (fixed when alpha_start == alpha_end)
         self.alpha_scheduler = AlphaScheduler(
             alpha_start=alpha_start,
             alpha_end=alpha_end,
@@ -207,10 +216,10 @@ class JointTaskLoss(nn.Module):
             ate_labels.view(-1),
         )
 
-        # ASC loss: focal loss with class weights
+        # ASC loss: standard weighted cross-entropy
         asc_loss = self.asc_criterion(asc_logits, asc_labels)
 
-        # Dynamic weighted combination
+        # Weighted combination
         alpha = self.current_alpha
         total_loss = alpha * ate_loss + (1.0 - alpha) * asc_loss
 
