@@ -40,7 +40,7 @@ _best_year: Optional[str] = None
 
 
 def _load_models():
-    """Load all available model checkpoints at startup."""
+    """Load the best available model checkpoint at startup."""
     global _predictors, _device, _best_year
 
     _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -50,22 +50,29 @@ def _load_models():
     checkpoint_dir = os.path.join(PROJECT_ROOT, "checkpoints")
     _try_download_from_hub(checkpoint_dir)
 
-    # Load each available checkpoint
-    for year in ["2014", "2015", "2016"]:
+    # Load best available model (most recent year first)
+    for year in ["2016", "2015", "2014"]:
         ckpt_path = os.path.join(checkpoint_dir, f"best_model_{year}.pt")
         if os.path.exists(ckpt_path):
             try:
-                print(f"  Loading {year} model...")
+                print(f"  Loading {year} model from {ckpt_path}...")
                 _predictors[year] = load_predictor(
                     checkpoint_path=ckpt_path, device=_device
                 )
-                _best_year = year  # Last loaded = most recent = "best"
+                _best_year = year
                 print(f"  [OK] {year} model loaded successfully")
+                break  # Only load one model to save memory on free tier
             except Exception as e:
+                import traceback
                 print(f"  [ERROR] Failed to load {year}: {e}")
+                traceback.print_exc()
 
     if not _predictors:
         print("[WARN] No models loaded! Inference will not work.")
+        print(f"  Checkpoint dir: {checkpoint_dir}")
+        print(f"  Exists: {os.path.exists(checkpoint_dir)}")
+        if os.path.exists(checkpoint_dir):
+            print(f"  Contents: {os.listdir(checkpoint_dir)}")
     else:
         print(f"[INFO] {len(_predictors)} model(s) ready. Best: {_best_year}")
 
@@ -80,27 +87,33 @@ def _try_download_from_hub(checkpoint_dir: str):
         if f.startswith("best_model_") and f.endswith(".pt")
     ]
     if existing:
+        print(f"  [INFO] Found local checkpoints: {existing}")
         return  # Already have local checkpoints
 
     repo_id = os.environ.get("HF_MODEL_REPO")
     if not repo_id:
-        print("  No HF_MODEL_REPO set, skipping HF Hub download.")
+        print("  [WARN] No HF_MODEL_REPO set, skipping HF Hub download.")
         return
 
+    print(f"  [INFO] Downloading models from HF Hub: {repo_id}")
     try:
         from huggingface_hub import hf_hub_download
-        for year in ["2014", "2015", "2016"]:
+        # Only download the best model (2016) to save time and disk
+        for year in ["2016", "2015", "2014"]:
             filename = f"best_model_{year}.pt"
             print(f"  [DOWNLOAD] {filename} from {repo_id}...")
-            hf_hub_download(
+            downloaded_path = hf_hub_download(
                 repo_id=repo_id,
                 filename=filename,
                 local_dir=checkpoint_dir,
                 token=os.environ.get("HF_TOKEN"),
             )
-            print(f"  [OK] Downloaded {filename}")
+            print(f"  [OK] Downloaded {filename} to {downloaded_path}")
+            break  # Only need one model
     except Exception as e:
+        import traceback
         print(f"  [WARN] HF Hub download failed: {e}")
+        traceback.print_exc()
 
 
 # ─── FastAPI App ──────────────────────────────────────────────────
