@@ -42,3 +42,7 @@ outputs/logs/
 
 # Legacy files (superseded)
 Data_Processing.ipynb
+
+# Cached data files
+Data/cached/*.pkl
+*.pkl
