@@ -1,3 +1,15 @@
+---
+title: ABSA Restaurant Reviews
+emoji: 📊
+colorFrom: purple
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: Joint aspect extraction and sentiment classification for restaurant reviews
+---
+
 # ModernBERT-RGAT: Joint Aspect Extraction & Sentiment Classification
 
 <div align="center">
