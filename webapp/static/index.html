@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ModernBERT-RGAT | Aspect Sentiment Analysis</title>
+    <meta name="description"
+        content="Joint Aspect Extraction and Sentiment Classification for Restaurant Reviews using ModernBERT and Relational Graph Attention Networks." />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Header -->
+        <header class="header">
+            <h1>ModernBERT-RGAT</h1>
+            <p class="subtitle">Joint Aspect Extraction &amp; Sentiment Classification for Restaurant Reviews</p>
+            <span class="tech-badge">ModernBERT · RGAT · BIO Tagging · FastAPI</span>
+        </header>
+
+        <!-- Input Card -->
+        <div class="input-card">
+            <div class="input-row">
+                <div class="input-group" style="flex:3">
+                    <label for="review-input">Restaurant Review</label>
+                    <textarea id="review-input" placeholder="Type or paste a restaurant review here..."
+                        rows="3"></textarea>
+                </div>
+                <div class="input-group" style="flex:0.8; min-width:140px">
+                    <label for="model-select">Model</label>
+                    <select id="model-select">
+                        <option value="best">Best Available</option>
+                        <option value="2016">SemEval 2016</option>
+                        <option value="2015">SemEval 2015</option>
+                        <option value="2014">SemEval 2014</option>
+                    </select>
+                </div>
+                <button class="btn-analyze" id="analyze-btn" onclick="analyzeReview()">
+                    Analyze
+                </button>
+            </div>
+
+            <!-- Example Reviews -->
+            <div class="examples-section">
+                <p class="section-label">Try an example</p>
+                <div class="examples-grid" id="examples-grid"></div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="loading-text">Analyzing review...</p>
+        </div>
+
+        <!-- Results Card -->
+        <div class="results-card" id="results-card">
+            <div class="results-header">
+                <h2>Analysis Results</h2>
+                <div class="meta-badges">
+                    <span class="badge badge-model" id="badge-model"></span>
+                    <span class="badge badge-time" id="badge-time"></span>
+                </div>
+            </div>
+
+            <!-- Highlighted Text -->
+            <div class="highlighted-text" id="highlighted-text"></div>
+
+            <!-- Aspect Cards -->
+            <div class="aspects-list" id="aspects-list"></div>
+
+            <!-- No Aspects Message -->
+            <div class="no-aspects" id="no-aspects" style="display:none">
+                No aspects detected in this review. Try a longer or more descriptive review.
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item"><span class="legend-dot positive"></span> Positive</div>
+                <div class="legend-item"><span class="legend-dot negative"></span> Negative</div>
+                <div class="legend-item"><span class="legend-dot neutral"></span> Neutral</div>
+                <div class="legend-item"><span class="legend-dot conflict"></span> Conflict</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Built with ModernBERT + RGAT · <a href="https://github.com/karthik0306" target="_blank">GitHub</a></p>
+        </div>
+
+    </div>
+
+    <script>
+        // ─── Example Reviews ─────────────────────────────────────────────
+        const EXAMPLES = [
+            "The spicy ramen was incredibly flavorful and the broth was rich.",
+            "Terrible pizza with a soggy crust, but the drinks were excellent.",
+            "Average food, nothing special about the ambiance either.",
+            "The sushi here is the best I have ever had, fresh and perfectly seasoned.",
+            "Long wait times and rude staff ruined an otherwise decent meal.",
+            "Loved the cheesecake but the coffee was lukewarm and bitter.",
+            "Great location with a beautiful patio, although prices are a bit high.",
+            "The butter chicken was creamy and aromatic, paired perfectly with garlic naan.",
+        ];
+
+        // Render example chips
+        const examplesGrid = document.getElementById('examples-grid');
+        EXAMPLES.forEach(ex => {
+            const chip = document.createElement('div');
+            chip.className = 'example-chip';
+            chip.textContent = ex.length > 55 ? ex.slice(0, 52) + '...' : ex;
+            chip.title = ex;
+            chip.addEventListener('click', () => {
+                document.getElementById('review-input').value = ex;
+                analyzeReview();
+            });
+            examplesGrid.appendChild(chip);
+        });
+
+        // ─── Analyze ─────────────────────────────────────────────────────
+        async function analyzeReview() {
+            const text = document.getElementById('review-input').value.trim();
+            if (!text) return;
+
+            const modelYear = document.getElementById('model-select').value;
+            const btn = document.getElementById('analyze-btn');
+            const loading = document.getElementById('loading');
+            const resultsCard = document.getElementById('results-card');
+
+            // UI state: loading
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+            loading.classList.add('visible');
+            resultsCard.classList.remove('visible');
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, model_year: modelYear }),
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Server error');
+                }
+
+                const data = await response.json();
+                renderResults(data);
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Analyze';
+                loading.classList.remove('visible');
+            }
+        }
+
+        // Allow Enter key (Ctrl+Enter) to submit
+        document.getElementById('review-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                analyzeReview();
+            }
+        });
+
+        // ─── Render Results ──────────────────────────────────────────────
+        function renderResults(data) {
+            const resultsCard = document.getElementById('results-card');
+            const highlightedText = document.getElementById('highlighted-text');
+            const aspectsList = document.getElementById('aspects-list');
+            const noAspects = document.getElementById('no-aspects');
+
+            // Badges
+            document.getElementById('badge-model').textContent = `Model: ${data.model_used}`;
+            document.getElementById('badge-time').textContent = `${data.processing_time_ms.toFixed(0)} ms`;
+
+            // Highlighted text
+            highlightedText.innerHTML = buildHighlightedHTML(data.text, data.aspects);
+
+            // Aspect cards
+            aspectsList.innerHTML = '';
+            if (data.aspects.length === 0) {
+                noAspects.style.display = 'block';
+                aspectsList.style.display = 'none';
+            } else {
+                noAspects.style.display = 'none';
+                aspectsList.style.display = 'flex';
+
+                data.aspects.forEach((a, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'aspect-card';
+                    card.innerHTML = `
+                <span class="aspect-name">"${escapeHtml(a.aspect)}"</span>
+                <span class="sentiment-badge ${a.sentiment}">${a.sentiment}</span>
+                <div class="confidence-bar-container">
+                    <div class="confidence-bar ${a.sentiment}" id="bar-${i}" style="width: 0%"></div>
+                </div>
+                <span class="confidence-value">${(a.confidence * 100).toFixed(1)}%</span>
+            `;
+                    aspectsList.appendChild(card);
+
+                    // Animate confidence bar
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            document.getElementById(`bar-${i}`).style.width = `${a.confidence * 100}%`;
+                        });
+                    });
+                });
+            }
+
+            resultsCard.classList.add('visible');
+        }
+
+        // ─── Build Highlighted HTML ──────────────────────────────────────
+        function buildHighlightedHTML(text, aspects) {
+            if (!aspects || aspects.length === 0) return escapeHtml(text);
+
+            // Sort by start position
+            const sorted = [...aspects].sort((a, b) => a.start - b.start);
+            let html = '';
+            let lastEnd = 0;
+
+            sorted.forEach(a => {
+                // Text before this aspect
+                if (a.start > lastEnd) {
+                    html += escapeHtml(text.slice(lastEnd, a.start));
+                }
+
+                // Highlighted aspect
+                html += `<span class="aspect-highlight ${a.sentiment}" title="${a.sentiment} (${(a.confidence * 100).toFixed(1)}%)">${escapeHtml(a.aspect)}</span>`;
+                lastEnd = a.end;
+            });
+
+            // Remaining text
+            if (lastEnd < text.length) {
+                html += escapeHtml(text.slice(lastEnd));
+            }
+
+            return html;
+        }
+
+        // ─── Utility ─────────────────────────────────────────────────────
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ─── Health Check on Load ────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/health');
+                const health = await res.json();
+                if (health.models_loaded.length === 0) {
+                    document.getElementById('analyze-btn').disabled = true;
+                    document.getElementById('analyze-btn').textContent = 'No Models';
+                }
+            } catch (e) {
+                // API not reachable, ignore
+            }
+        });
+    </script>
+
+</body>
+
+</html>

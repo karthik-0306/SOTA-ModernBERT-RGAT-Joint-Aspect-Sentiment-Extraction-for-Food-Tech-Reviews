@@ -1,0 +1,28 @@
+# ══════════════════════════════════════════════════════════════════
+# Docker Compose — Local Development
+# ══════════════════════════════════════════════════════════════════
+# Usage:
+#   docker compose up --build
+#   Open http://localhost:7860
+# ══════════════════════════════════════════════════════════════════
+
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7860:7860"
+    environment:
+      - HF_MODEL_REPO=${HF_MODEL_REPO:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      # Mount checkpoints locally so they don't re-download
+      - ./checkpoints:/app/checkpoints
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s   # Models take time to load

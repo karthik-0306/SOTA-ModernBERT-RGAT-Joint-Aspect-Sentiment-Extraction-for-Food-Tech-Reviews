@@ -1,4 +1,4 @@
-# 🚀 ModernBERT-RGAT: Joint Aspect Extraction & Sentiment Classification
+# ModernBERT-RGAT: Joint Aspect Extraction & Sentiment Classification
 
 <div align="center">
 
@@ -30,7 +30,7 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
                            ┌──────────────────────┐
@@ -128,7 +128,7 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component | Technology |
 |-----------|-----------|
@@ -143,13 +143,13 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/karthik-0306/SOTA-ModernBERT-RGAT-Joint-Aspect-Sentiment-Extraction-for-Food-Tech-Reviews.git
+git clone https://github.com/karthik0306/SOTA-ModernBERT-RGAT-Joint-Aspect-Sentiment-Extraction-for-Food-Tech-Reviews.git
 cd SOTA-ModernBERT-RGAT-Joint-Aspect-Sentiment-Extraction-for-Food-Tech-Reviews
 
 # Create environment
@@ -230,7 +230,7 @@ notebooks/06_inference_demo.ipynb       # Interactive inference demo
 
 ---
 
-## 🔧 Training Configuration
+## Training Configuration
 
 | Parameter | Value |
 |-----------|-------|

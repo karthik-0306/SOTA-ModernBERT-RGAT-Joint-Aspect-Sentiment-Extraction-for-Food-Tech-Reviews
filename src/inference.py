@@ -368,12 +368,12 @@ class AspectSentimentPredictor:
 
         # Sentiment emoji
         emoji = {
-            'positive': '😊', 'negative': '😞',
-            'neutral': '😐', 'conflict': '🤔',
+            'positive': '[+]', 'negative': '[-]',
+            'neutral': '[~]', 'conflict': '[?]',
         }
 
         for p in predictions:
-            e = emoji.get(p.sentiment, '❓')
+            e = emoji.get(p.sentiment, '[ ]')
             lines.append(
                 f'    {e} "{p.aspect}" → {p.sentiment} '
                 f'(conf: {p.confidence:.2f}, chars {p.start}:{p.end})'

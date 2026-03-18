@@ -1,4 +1,4 @@
-# 🏗️ Model Architecture — ModernBERT-RGAT
+# Model Architecture — ModernBERT-RGAT
 
 ## Overview
 

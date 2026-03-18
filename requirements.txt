@@ -31,5 +31,12 @@ tensorboard>=2.14.0
 jupyter>=1.0.0
 ipywidgets>=8.0.0
 
+# Web App
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+
+# Model Hub
+huggingface_hub>=0.20.0
+
 # Utilities
 tqdm>=4.65.0

@@ -76,9 +76,9 @@ def create_app():
 
         # Text summary
         lines = [f"Found {len(predictions)} aspect(s):\n"]
-        emoji = {'positive': '😊', 'negative': '😞', 'neutral': '😐', 'conflict': '🤔'}
+        emoji = {'positive': '[+]', 'negative': '[-]', 'neutral': '[~]', 'conflict': '[?]'}
         for p in predictions:
-            e = emoji.get(p.sentiment, '❓')
+            e = emoji.get(p.sentiment, '[ ]')
             lines.append(f"  {e} \"{p.aspect}\" → {p.sentiment} (confidence: {p.confidence:.2f})")
 
         return html, "\n".join(lines)
@@ -106,7 +106,7 @@ def create_app():
     ) as app:
         gr.HTML("""
         <div class="main-header">
-            <h1>🍽️ ModernBERT-RGAT</h1>
+            <h1>ModernBERT-RGAT</h1>
             <p>Joint Aspect Extraction & Sentiment Classification for Restaurant Reviews</p>
             <p style="font-size: 13px; color: #95a5a6;">
                 Powered by ModernBERT + Relational Graph Attention Networks
@@ -122,7 +122,7 @@ def create_app():
                     lines=3,
                     max_lines=6,
                 )
-                analyze_btn = gr.Button("🔍 Analyze", variant="primary", size="lg")
+                analyze_btn = gr.Button("Analyze", variant="primary", size="lg")
                 gr.Examples(
                     examples=[[ex] for ex in examples],
                     inputs=text_input,
