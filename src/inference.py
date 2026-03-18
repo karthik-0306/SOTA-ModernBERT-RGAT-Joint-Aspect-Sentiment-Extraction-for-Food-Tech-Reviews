@@ -138,7 +138,7 @@ class AspectSentimentPredictor:
         )
 
         # Load weights
-        checkpoint = torch.load(checkpoint_path, map_location='cpu')
+        checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
         model.load_state_dict(checkpoint['model_state_dict'], strict=False)
         print(f"Loaded checkpoint: {checkpoint_path}")
         print(f"  Epoch: {checkpoint.get('epoch', '?')}")
