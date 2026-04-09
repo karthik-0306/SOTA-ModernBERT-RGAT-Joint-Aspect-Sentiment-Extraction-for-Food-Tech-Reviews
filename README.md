@@ -51,7 +51,7 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
                            └──────────┬───────────┘
                                       │
                     ┌─────────────────┼─────────────────┐
-                    │                 │                  │
+                    │                 │                 │
             ┌───────▼───────┐ ┌──────▼──────┐   ┌──────▼──────┐
             │  ModernBERT   │ │  SpaCy NLP  │   │  Tokenizer  │
             │  Tokenizer    │ │  Dep Parse  │   │  Alignment  │
@@ -78,7 +78,7 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
                         └──────┬──────┘
                                │
                     ┌──────────┼──────────┐
-                    │                      │
+                    │                     │
             ┌───────▼───────┐    ┌────────▼────────┐
             │   ATE Head    │    │    ASC Head     │
             │  Token-level  │    │   Span-level    │
@@ -88,7 +88,7 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
             │  I-ASP        │    │   neu / conflict│
             └───────┬───────┘    └────────┬────────┘
                     │                     │
-                    ▼                      ▼
+                    ▼                     ▼
             Extracted Aspects      Sentiment Labels
             ["pasta", "service"]   [positive, negative]
 ```
