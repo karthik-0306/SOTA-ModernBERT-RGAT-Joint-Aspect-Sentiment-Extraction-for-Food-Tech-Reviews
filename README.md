@@ -145,22 +145,9 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
 ---
 
 ## 📸 Dashboard Screenshots
+<img width="1282" height="696" alt="image" src="https://github.com/user-attachments/assets/aa0f8d32-62c2-4f06-8444-7fb8c0d137f4" />
 
-<!-- Replace the placeholder paths below with your actual screenshot paths once captured -->
-
-<div align="center">
-  <img src="<img width="1326" height="709" alt="image" src="https://github.com/user-attachments/assets/fad85996-65d3-4525-b1d0-a3c54cdb8ee2" />
-1" alt="Dashboard Screenshot 1" width="800"/>
-  <br>
-  <p><em>Example inference on a restaurant review.</em></p>
-</div>
-
-<div align="center">
-  <img src="<img width="1254" height="622" alt="image" src="https://github.com/user-attachments/assets/31363fce-92b5-48a5-ac38-7bd30e7464ed" />
-" alt="Dashboard Screenshot 2" width="800"/>
-  <br>
-  <p><em>Dashboard visualization of extracted aspects and sentiments.</em></p>
-</div>
+<img width="1254" height="622" alt="image" src="https://github.com/user-attachments/assets/2d544d3b-1eb9-4f0b-8e6c-ea257e13c4c4" />
 
 ---
 
