@@ -149,13 +149,15 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
 <!-- Replace the placeholder paths below with your actual screenshot paths once captured -->
 
 <div align="center">
-  <img src="https://placehold.co/800x450/e2e8f0/1e293b?text=Dashboard+Screenshot+1" alt="Dashboard Screenshot 1" width="800"/>
+  <img src="<img width="1326" height="709" alt="image" src="https://github.com/user-attachments/assets/fad85996-65d3-4525-b1d0-a3c54cdb8ee2" />
+1" alt="Dashboard Screenshot 1" width="800"/>
   <br>
   <p><em>Example inference on a restaurant review.</em></p>
 </div>
 
 <div align="center">
-  <img src="https://placehold.co/800x450/e2e8f0/1e293b?text=Dashboard+Screenshot+2" alt="Dashboard Screenshot 2" width="800"/>
+  <img src="<img width="1254" height="622" alt="image" src="https://github.com/user-attachments/assets/31363fce-92b5-48a5-ac38-7bd30e7464ed" />
+" alt="Dashboard Screenshot 2" width="800"/>
   <br>
   <p><em>Dashboard visualization of extracted aspects and sentiments.</em></p>
 </div>
