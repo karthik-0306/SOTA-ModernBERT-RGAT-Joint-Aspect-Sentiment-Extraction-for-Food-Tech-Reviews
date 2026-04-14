@@ -1,15 +1,3 @@
----
-title: ABSA Restaurant Reviews
-emoji: 📊
-colorFrom: purple
-colorTo: indigo
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
-short_description: Aspect extraction and sentiment for restaurant reviews
----
-
 # ModernBERT-RGAT: Joint Aspect Extraction & Sentiment Classification
 
 <div align="center">
@@ -19,6 +7,7 @@ short_description: Aspect extraction and sentiment for restaurant reviews
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![PyTorch 2.1+](https://img.shields.io/badge/PyTorch-2.1+-ee4c2c.svg)](https://pytorch.org)
 [![ModernBERT](https://img.shields.io/badge/Backbone-ModernBERT_base-orange.svg)](https://huggingface.co/answerdotai/ModernBERT-base)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-HuggingFace%20Space-blue?style=flat&logo=huggingface)](https://huggingface.co/spaces/karthik0306/absa-restaurant-reviews)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 </div>
@@ -44,53 +33,53 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
 
 ## Architecture
 
-```
-                           ┌──────────────────────┐
-                           │   Raw Text Input      │
+```text
+                           ┌───────────────────────┐
+                           │    Raw Text Input     │
                            │ "The pasta was great" │
-                           └──────────┬───────────┘
-                                      │
-                    ┌─────────────────┼─────────────────┐
-                    │                 │                  │
-            ┌───────▼───────┐ ┌──────▼──────┐   ┌──────▼──────┐
-            │  ModernBERT   │ │  SpaCy NLP  │   │  Tokenizer  │
-            │  Tokenizer    │ │  Dep Parse  │   │  Alignment  │
-            └───────┬───────┘ └──────┬──────┘   └──────┬──────┘
-                    │                │                 │
-                    │         ┌──────▼──────┐          │
-                    │         │  Adjacency   │         │
-                    │         │  Tensor [R]   │        │
-                    │         └──────┬──────┘          │
-                    │                │                 │
-            ┌───────▼────────────────▼─────────────────▼──┐
-            │                                             │
-            │        ModernBERT Encoder (22 layers)       │
-            │        ═══════════════════════════          │
-            │        RoPE + Flash Attention               │
-            │        (8 layers unfrozen for fine-tuning)  │
-            │                                             │
-            └──────────────────┬──────────────────────────┘
-                               │
-                        ┌──────▼──────┐
-                        │    RGAT     │
-                        │   Layer     │
-                        │ (7relations)│
-                        └──────┬──────┘
-                               │
-                    ┌──────────┼──────────┐
-                    │                      │
-            ┌───────▼───────┐    ┌────────▼────────┐
-            │   ATE Head    │    │    ASC Head     │
-            │  Token-level  │    │   Span-level    │
-            │  BIO Tagger   │    │   Classifier    │
-            │  ───────────  │    │   ────────────  │
-            │  O / B-ASP /  │    │   pos / neg /   │
-            │  I-ASP        │    │   neu / conflict│
-            └───────┬───────┘    └────────┬────────┘
-                    │                     │
-                    ▼                      ▼
-            Extracted Aspects      Sentiment Labels
-            ["pasta", "service"]   [positive, negative]
+                           └───────────┬───────────┘
+                                       │
+                     ┌─────────────────┼─────────────────┐
+                     │                 │                 │
+             ┌───────▼───────┐ ┌───────▼───────┐ ┌───────▼───────┐
+             │  ModernBERT   │ │   SpaCy NLP   │ │   Tokenizer   │
+             │  Tokenizer    │ │   Dep Parse   │ │   Alignment   │
+             └───────┬───────┘ └───────┬───────┘ └───────┬───────┘
+                     │                 │                 │
+                     │         ┌───────▼───────┐         │
+                     │         │   Adjacency   │         │
+                     │         │   Tensor [R]  │         │
+                     │         └───────┬───────┘         │
+                     │                 │                 │
+             ┌───────▼─────────────────▼─────────────────▼───────┐
+             │                                                   │
+             │           ModernBERT Encoder (22 layers)          │
+             │           ══════════════════════════════          │
+             │               RoPE + Flash Attention              │
+             │         (8 layers unfrozen for fine-tuning)       │
+             │                                                   │
+             └─────────────────────────┬─────────────────────────┘
+                                       │
+                               ┌───────▼───────┐
+                               │     RGAT      │
+                               │     Layer     │
+                               │ (7 relations) │
+                               └───────┬───────┘
+                                       │
+                     ┌─────────────────┴─────────────────┐
+                     │                                   │
+             ┌───────▼───────┐                   ┌───────▼───────┐
+             │   ATE Head    │                   │   ASC Head    │
+             │  Token-level  │                   │  Span-level   │
+             │  BIO Tagger   │                   │  Classifier   │
+             │  ───────────  │                   │  ──────────   │
+             │  O / B-ASP /  │                   │  pos / neg /  │
+             │    I-ASP      │                   │ neu / conflict│
+             └───────┬───────┘                   └───────┬───────┘
+                     │                                   │
+                     ▼                                   ▼
+             Extracted Aspects                   Sentiment Labels
+           ["pasta", "service"]                [positive, negative]
 ```
 
 **RGAT Relation Types:**
@@ -152,6 +141,24 @@ Unlike pipeline approaches that treat these as separate tasks, our architecture 
 | **Loss** | Joint weighted CrossEntropy (ATE + ASC) with label smoothing |
 | **Regularization** | Dropout (0.4), weight decay (0.05), gradient clipping |
 | **Demo** | Gradio interactive web app |
+
+---
+
+## 📸 Dashboard Screenshots
+
+<!-- Replace the placeholder paths below with your actual screenshot paths once captured -->
+
+<div align="center">
+  <img src="https://placehold.co/800x450/e2e8f0/1e293b?text=Dashboard+Screenshot+1" alt="Dashboard Screenshot 1" width="800"/>
+  <br>
+  <p><em>Example inference on a restaurant review.</em></p>
+</div>
+
+<div align="center">
+  <img src="https://placehold.co/800x450/e2e8f0/1e293b?text=Dashboard+Screenshot+2" alt="Dashboard Screenshot 2" width="800"/>
+  <br>
+  <p><em>Dashboard visualization of extracted aspects and sentiments.</em></p>
+</div>
 
 ---
 
